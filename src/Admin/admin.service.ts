@@ -61,22 +61,22 @@ export class adminService {
   }
 
 
-  async updateEmp(id: number, createEmpDto: createEmpDto): Promise<any> {
+  async updateEmp(id: number, data: any): Promise<any> {
     const emp = await this.employeeRepository.findOne({
       where: { id }
     });
     if (emp) {
-      if (createEmpDto.role) {
+      if (data.role) {
         return {
           code: 403
         }
       }
-      if (createEmpDto.password) {
+      if (data.password) {
         return {
           code: 404
         }
       }
-      const updateInfo = await this.employeeRepository.update(id, createEmpDto)
+      const updateInfo = await this.employeeRepository.update(id, data)
       return {
         code: 200
       }

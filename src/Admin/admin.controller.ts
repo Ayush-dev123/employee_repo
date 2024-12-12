@@ -40,7 +40,7 @@ export class AdminController {
 
     @UseGuards(AuthGuard)
     @Put('inactive_user/:id')
-    async changeStatus(@Param('id') id: string, @Body() createUserDto: createEmpDto, @Res() res: Response, @Req() request: Request) {
+    async changeStatus(@Param('id') id: string, @Res() res: Response, @Req() request: Request) {
         const payload = request['user']
         if (payload.role != 'admin') {
             return res.status(400).json({
@@ -73,7 +73,7 @@ export class AdminController {
 
     @UseGuards(AuthGuard)
     @Put('active_user/:id')
-    async activeStatus(@Param('id') id: string, @Body() createUserDto: createEmpDto, @Res() res: Response, @Req() request: Request) {
+    async activeStatus(@Param('id') id: string, @Res() res: Response, @Req() request: Request) {
         const payload = request['user']
         if (payload.role != 'admin') {
             return res.status(400).json({
@@ -98,13 +98,12 @@ export class AdminController {
 
     @UseGuards(AuthGuard)
     @Post('get_emp/:id')
-    async findEmp(@Param('id') id: string, @Body() createUserDto: createEmpDto, @Res() res: Response, @Req() request: Request) {
+    async findEmp(@Param('id') id: string, @Res() res: Response, @Req() request: Request) {
         const payload = request['user']
         if (payload.role != 'admin') {
             return res.status(400).json({
                 code: 400,
                 message: "You cannot access to this route !"
-
             })
         }
         const employee = await this.adminService.findEmp(+id)
@@ -124,7 +123,7 @@ export class AdminController {
 
     @UseGuards(AuthGuard)
     @Put('update_emp/:id')
-    async updateEmp(@Param('id') id: string, @Body() createEmpDto: createEmpDto, @Res() res: Response, @Req() request: Request) {
+    async updateEmp(@Param('id') id: string, @Body() data: any, @Res() res: Response, @Req() request: Request) {
         const payload = request['user']
         if (payload.role != 'admin') {
             return res.status(400).json({
@@ -132,7 +131,7 @@ export class AdminController {
                 message: "You cannot access to this route !"
             })
         }
-        const updateInfo = await this.adminService.updateEmp(+id, createEmpDto)
+        const updateInfo = await this.adminService.updateEmp(+id, data)
         if (updateInfo.code == 400) {
             return res.status(400).json({
                 code: updateInfo.code,
@@ -145,10 +144,10 @@ export class AdminController {
                 message: "You cannot change the role !"
             })
         }
-        if(updateInfo.code ==404){
+        if (updateInfo.code == 404) {
             return res.status(400).json({
-                code:400,
-                message:"You cannot change the password !"
+                code: 400,
+                message: "You cannot change the password !"
             })
         }
         return res.status(200).json({

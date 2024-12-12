@@ -22,9 +22,11 @@ export class AuthService {
     ) { }
 
     async login(logindto: loginDto): Promise<any> {
-        const { email, password } = logindto;
-
+        var { email, password } = logindto;
+        email = email.toLocaleLowerCase()
+        console.log(email)
         var isExistAdmin = await this.adminRepository.findOne({ where: { email } })
+
         if (isExistAdmin) {
             const isPasswordMatch = await this.helpersService.comparePassword(password, isExistAdmin.password)
             if (!isPasswordMatch) {
@@ -32,6 +34,7 @@ export class AuthService {
                     code: 400
                 }
             }
+
             const payload = {
                 id: isExistAdmin.id,
                 email: isExistAdmin.email,
@@ -50,6 +53,7 @@ export class AuthService {
                     email
                 }
             })
+            console.log(isExistEmployee)
             if (isExistEmployee) {
                 const isPasswordMatch = await this.helpersService.comparePassword(password, isExistEmployee.password)
                 if (!isPasswordMatch) {
@@ -106,5 +110,5 @@ export class AuthService {
     }
 
 
-    
+
 }

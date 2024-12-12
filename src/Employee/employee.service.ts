@@ -45,4 +45,24 @@ export class employeeDetailService {
             }
         }
     }
+
+    async updateDetails(id: number, data: any) {
+        const details = await this.detailRepository.find({
+            where: { userId: id }
+        })
+        let userId = id
+
+        if (!details) {
+            return {
+                code: 400
+            }
+        }
+        else {
+            const updateInfo = await this.detailRepository.update({ userId: id }, { ...data, updated_date: new Date().toISOString(), })
+            return {
+                code: 200,
+                data: updateInfo
+            }
+        }
+    }
 }

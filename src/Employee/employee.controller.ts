@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Req, Res, UseGuards, Get } from '@nestjs/common';
+import { Body, Controller, Post, Req, Res, UseGuards, Get, Put, Param } from '@nestjs/common';
 import { employeeDetailService } from './employee.service'
 import { Request, Response } from 'express';
 import { AuthGuard } from 'src/auth/auth.guard';
@@ -59,7 +59,40 @@ export class employeeDetailController {
             return res.status(200).json({
                 code: 200,
                 message: "employee detail----",
-                details:getDetail.data
+                details: getDetail.data
+            })
+        }
+    }
+
+
+    @UseGuards(AuthGuard)
+    @Put('update_detail/:id')
+    async update_detail(@Param('id') id: string, @Body() data: any, @Res() res: Response, @Req() request: Request) {
+        const payload = request['user']
+
+        if (payload.role != 'employee') {
+            return res.status(400).json({
+                code: 400,
+                message: "you are not allowed to access this route !!"
+            })
+        }
+        if (payload.id! = id) {
+            return res.status(400).json({
+                code: 400,
+                message: "you cannot change other's detail !!"
+            })
+        }
+        const detail = await this.employeeDetailService.updateDetails(+id, data)
+        if (detail.code == 400) {
+            return res.status(400).json({
+                code: 400,
+                message: "something went wrong!! employee details not created"
+            })
+        }
+        else {
+            return res.status(200).json({
+                code: 200,
+                message: "employee details updated... !!"
             })
         }
     }

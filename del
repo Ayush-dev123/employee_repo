@@ -1,0 +1,132 @@
+// import { Inject, Injectable, Logger } from '@nestjs/common';
+// import { CreateBookingWrpReq } from '../apis/wrappers/createbooking.wrp.req';
+// import { CreateBookingWrpRes } from '../apis/wrappers/createbooking.wrp.res';
+// import { AbstractComponent } from '@morekryupa2024/core';
+// import { Postgress } from 'src/common/interfaces/postgres.interface';
+// import { booking } from 'src/common/db/postgres/entiys/booking/booking.entity';
+// import { booking_type, bookingStatus, Services } from 'src/common/util/enum';
+// import { booking_service } from 'src/common/db/postgres/entiys/booking_service/booking_service.entity';
+// import { IGetAllBookingService } from '../interface/get-all-booking.interface';
+// import { InjectQueue } from '@nestjs/bull'
+// import { Queue } from 'bull';
+// import { RedisClientType } from 'redis';
+// import { redisService } from '../../Redis/redis-bull.service'
+
+// @Injectable()
+// export class CreateBookingComponent
+//     implements AbstractComponent<CreateBookingWrpReq, CreateBookingWrpRes> {
+//     private readonly logger = new Logger(CreateBookingComponent.name);
+//     constructor(
+//         @Inject(Postgress)
+//         private readonly bookingEntity: Postgress<booking>,
+//         @Inject(Postgress)
+//         private readonly bookingServiceEntity: Postgress<booking_service>,
+//         @Inject(Services.BOOKING_SERVICES)
+//         private readonly getBooingService: IGetAllBookingService,
+//         @InjectQueue('bookingQueue') private readonly bookingQueue: Queue,
+//         @Inject('REDIS_CLIENT') private readonly redisClient: RedisClientType,
+//         private readonly redisService: redisService,
+//     ) { }
+//     // private readonly postgresServices : Postgress
+//     isComponentAsync(): Promise<boolean> {
+//         return Promise.resolve(false);
+//     }
+//     isExecutionRequired(
+//         req: CreateBookingWrpReq,
+//         res: CreateBookingWrpRes,
+//     ): Promise<boolean> {
+//         return Promise.resolve(!req.update);
+//     }
+//     async execute(
+//         req: CreateBookingWrpReq,
+//         res: CreateBookingWrpRes,
+//     ): Promise<void> {
+//         try {
+//             console.log("CreateBookingComponent")
+//             const { minDate, maxDate, areEqual } = await this.getBooingService.findMinMaxDates(req?.booking_info?.start_date_array)
+
+//             let bookingObject = {
+//                 profile_id: req?.booking_info?.profile_id,
+//                 booking_type: areEqual ? booking_type.ONE_TIME : booking_type.RECURRING,
+//                 start_date: minDate,
+//                 end_date: maxDate,
+//                 start_time: req?.booking_info?.start_time,
+//                 end_time: await this.getBooingService.calculateEndTime(req?.booking_info?.start_time, req?.booking_info?.no_of_hours),
+//                 gender: req?.booking_info?.gender,
+//                 updated_by: req?.customer_id,
+//                 customer_id: req?.customer_id,
+//                 no_of_hours: req?.booking_info?.no_of_hours,
+//                 status: bookingStatus.OPEN,
+//                 is_active: true,
+//                 created_at: new Date(),
+//                 updated_at: new Date(),
+//                 is_deleted: false,
+//             };
+//             this.logger.log(bookingObject, "booking object")
+//             if (req.booking_info?.caregiver_id) {
+//                 const query = `
+//   SELECT * FROM booking_service bs
+//   WHERE bs.caregiver_id = '${req?.booking_info?.caregiver_id}'
+//   AND bs.service_status  IN ('pending', 'start_by_caregiver', 'confirm_by_customer')
+//   AND (
+//       bs.service_date BETWEEN '${bookingObject?.start_date}' AND '${bookingObject?.end_date}'
+//       AND (
+//           (bs.service_start_time < '${bookingObject?.end_time}' AND bs.service_end_time > '${bookingObject?.start_time}')
+//       )
+//   )`;
+//                 this.bookingServiceEntity.entity = booking_service.name;
+//                 const result = await this.bookingServiceEntity.rawQuery(query, []);
+//                 console.log("CreateBookingComponent Result", result)
+//                 if (result?.length > 0) {
+//                     res.success = false;
+//                     res.message = 'Oops! This Caregiver is Already Booked at Your Chosen Time. Please Select a Different Slot!';
+//                     throw res;
+//                 }
+//                 else {
+//                     this.bookingEntity.entity = booking.name;
+//                     const bookingData = await this.bookingEntity.insertOne(bookingObject);
+//                     console.log("console 2")
+//                     if (!bookingData.status) {
+//                         res.success = false;
+//                         res.message = bookingData.message;
+//                         throw res;
+//                     } else {
+//                         req.booking_id = bookingData?.data[0]?.id;
+//                         res.data = bookingData?.data[0];
+//                     }
+//                 }
+//             }
+//             else {
+//                 this.bookingEntity.entity = booking.name;
+//                 const bookingData = await this.bookingEntity.insertOne(bookingObject);
+//                 if (!bookingData.status) {
+//                     res.success = false;
+//                     res.message = bookingData.message;
+//                     throw res;
+//                 } else {
+//                     console.log(bookingData.data[0].start_date)
+//                     console.log(bookingData.data[0].start_time)
+//                     const reminderTime = await this.redisService.timeCalculation(bookingData.data[0].start_date, bookingData.data[0].start_time);
+//                     console.log(reminderTime)
+//                     // if (reminderTime > 0) {
+//                     //   await this.bookingQueue.add('saveBookingJob', { bookingData }, { delay: reminderTime });
+//                     //   console.log('Reminder scheduled', reminderTime);
+//                     // } else {
+//                     //   console.log('Event is less than 15 minutes away, processing immediately');
+//                     // }
+//                     const redisKey = `${bookingData.data[0].id}:${bookingData.data[0].start_time}${bookingData.data[0].end_time}`;
+
+//                     await this.redisClient.set(redisKey, JSON.stringify(bookingData.data[0]))
+//                     req.booking_id = bookingData?.data[0]?.id;
+//                     res.data = bookingData?.data[0];
+//                 }
+//             }
+//             return null;
+//         } catch (error) {
+//             throw {
+//                 message: error?.message ?? 'Oops! This Caregiver is Already Booked at Your Chosen Time. Please Select a Different Slot!',
+//                 status: false,
+//             };
+//         }
+//     }
+// }

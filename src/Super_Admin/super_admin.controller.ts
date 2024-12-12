@@ -71,7 +71,7 @@ export class SuperAdminController {
 
   @UseGuards(AuthGuard)
   @Put('inactive_user/:id')
-  async delete(@Param('id') id: string, @Body() createUserDto: createEmpDto, @Res() res: Response, @Req() request: Request) {
+  async delete(@Param('id') id: string, @Res() res: Response, @Req() request: Request) {
     const payload = request['user']
     if (payload.role != 'Super Admin') {
       return res.status(400).json({
@@ -95,7 +95,7 @@ export class SuperAdminController {
 
   @UseGuards(AuthGuard)
   @Put('active_user/:id')
-  async activeUser(@Param('id') id: string, @Body() createUserDto: createEmpDto, @Res() res: Response, @Req() request: Request) {
+  async activeUser(@Param('id') id: string, @Res() res: Response, @Req() request: Request) {
     const payload = request['user']
     if (payload.role != 'Super Admin' || payload.role != 'Super Admin') {
       return res.status(400).json({
@@ -121,7 +121,7 @@ export class SuperAdminController {
 
   @UseGuards(AuthGuard)
   @Put('update/:id')
-  async updateEmp(@Param('id') id: string, @Body() createEmpDto: createEmpDto, @Res() res: Response, @Req() request: Request) {
+  async updateEmp(@Param('id') id: string, @Body() data: any, @Res() res: Response, @Req() request: Request) {
     const payload = request['user']
     if (payload.role != 'super admin') {
       return res.status(400).json({
@@ -129,7 +129,7 @@ export class SuperAdminController {
         message: "Only super Super admin can update user"
       })
     }
-    const updateInfo = await this.superAdminService.updateEmp(+id, createEmpDto)
+    const updateInfo = await this.superAdminService.updateEmp(+id, data)
     if (updateInfo.code == 400) {
       return res.status(400).json({
         code: updateInfo.code,
@@ -145,7 +145,7 @@ export class SuperAdminController {
 
   @UseGuards(AuthGuard)
   @Delete('delete_per/:id')
-  async deletePermanently(@Param('id') id: string, @Body() createEmpDto: createEmpDto, @Res() res: Response, @Req() request: Request) {
+  async deletePermanently(@Param('id') id: string, @Res() res: Response, @Req() request: Request) {
     const payload = request['user']
     if (payload.role != 'Super Admin') {
       return res.status(400).json({
@@ -154,7 +154,7 @@ export class SuperAdminController {
       })
     }
 
-    const updateInfo = await this.superAdminService.deletePermanently(+id, createEmpDto)
+    const updateInfo = await this.superAdminService.deletePermanently(+id)
     if (updateInfo.code == 400) {
       return res.status(400).json({
         code: updateInfo.code,

@@ -1,4 +1,4 @@
-import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn } from 'typeorm';
 
 @Entity()
 export class super_admin_table {
@@ -19,5 +19,11 @@ export class super_admin_table {
 
   @Column()
   status: string;
+
+  @CreateDateColumn({ type: "timestamp", default: () => "CURRENT_TIMESTAMP" })
+  created_date: Date;
+
+  @Column({ type: "timestamp", nullable: true, default: () => "NULL" })
+  updated_date: Date | null;
 
 }

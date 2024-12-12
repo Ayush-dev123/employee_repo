@@ -19,14 +19,15 @@ export class SuperAdminService {
 
 
     async createEmp(createEmpDto: createEmpDto): Promise<any> {
+        var email = createEmpDto.email.toLowerCase()
         if (createEmpDto.role == 'employee') {
             const hashpassword = await this.helpersService.hashPassword(createEmpDto.password)
-            const newEmp = this.employeeRepository.create({ ...createEmpDto, password: hashpassword });
+            const newEmp = this.employeeRepository.create({ ...createEmpDto, email: email, password: hashpassword });
             return this.employeeRepository.save(newEmp);
         }
         else if (createEmpDto.role == 'admin') {
             const hashpassword = await this.helpersService.hashPassword(createEmpDto.password)
-            const newEmp = this.adminRepository.create({ ...createEmpDto, password: hashpassword });
+            const newEmp = this.adminRepository.create({ ...createEmpDto, email: email, password: hashpassword });
             return this.adminRepository.save(newEmp);
         }
         else {
@@ -99,12 +100,12 @@ export class SuperAdminService {
     }
 
 
-    async updateEmp(id: number, createEmpDto: createEmpDto): Promise<any> {
+    async updateEmp(id: number, data: any): Promise<any> {
         const emp = await this.employeeRepository.findOne({
             where: { id }
         });
         if (emp) {
-            const updateInfo = await this.employeeRepository.update(id, createEmpDto)
+            const updateInfo = await this.employeeRepository.update(id, data)
             return {
                 code: 200
             }
@@ -118,7 +119,7 @@ export class SuperAdminService {
                     code: 400
                 }
             }
-            const updateInfo = await this.employeeRepository.update(id, createEmpDto);
+            const updateInfo = await this.employeeRepository.update(id, data);
             return {
                 code: 200
             }
@@ -127,7 +128,7 @@ export class SuperAdminService {
 
 
 
-    async deletePermanently(id: number, createEmpDto: createEmpDto): Promise<any> {
+    async deletePermanently(id: number): Promise<any> {
         const emp = await this.employeeRepository.findOne({
             where: { id }
         });

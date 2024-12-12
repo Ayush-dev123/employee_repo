@@ -3,14 +3,14 @@ import { IsString, IsEmail, IsNotEmpty, IsOptional } from 'class-validator';
 
 export class empDetail {
 
-    @IsNotEmpty()
+
     userId: number;
 
-    @IsEmail()
+
     @IsNotEmpty()
     department: string;
 
-    @IsString()
+
     @IsNotEmpty()
     salary: number;
 
